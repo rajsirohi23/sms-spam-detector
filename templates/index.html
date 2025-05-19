@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural SMS Guardian</title>
+    <style>
+        :root {
+            --gradient-bg: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            --text-color: #ffffff;
+            --accent-color: #4deeea;
+            --secondary-accent: #74ee15;
+            --danger-color: #ff3e88;
+            --safe-color: #1eff8e;
+            --box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--gradient-bg);
+            color: var(--text-color);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='rgba(255,255,255,0.05)' fill-rule='evenodd'/%3E%3C/svg%3E");
+            z-index: -1;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 1000px;
+            min-height: 80vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: var(--glass-border);
+            box-shadow: var(--box-shadow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .app-header {
+            padding: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: var(--glass-border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            margin-right: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            background: var(--accent-color);
+            border-radius: 12px;
+            color: #000;
+        }
+
+        .logo-text h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .logo-text p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .app-body {
+            display: flex;
+            flex: 1;
+            height: 65vh;
+        }
+
+        .app-sidebar {
+            width: 300px;
+            padding: 2rem;
+            border-right: var(--glass-border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-main {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            border: var(--glass-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .input-container {
+            margin-top: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-container label {
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            background: rgba(0, 0, 0, 0.2);
+            border: var(--glass-border);
+            border-radius: 12px;
+            padding: 1rem;
+            color: var(--text-color);
+            font-size: 1rem;
+            resize: none;
+            margin-bottom: 1.5rem;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .btn {
+            background: var(--accent-color);
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-icon {
+            margin-right: 0.5rem;
+        }
+
+        .recent-messages {
+            margin-top: 2rem;
+        }
+
+        .recent-messages h3 {
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .message-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            overflow-y: auto;
+            max-height: 300px;
+        }
+
+        .message-card {
+            background: var(--glass-bg);
+            border: var(--glass-border);
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message-text {
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .message-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .result-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .result-card {
+            width: 100%;
+            background: var(--glass-bg);
+            border: var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .result-heading {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-details {
+            font-size: 1rem;
+            opacity: 0.8;
+            margin-bottom: 2rem;
+        }
+
+        .accuracy-bar {
+            width: 100%;
+            height: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .accuracy-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 10px;
+            transition: width 1s ease;
+        }
+
+        .accuracy-text {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .neural-visualization {
+            position: absolute;
+            bottom: -50px;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            opacity: 0.2;
+            pointer-events: none;
+        }
+
+        .features-list {
+            width: 100%;
+            margin-top: 2rem;
+            border-top: var(--glass-border);
+            padding-top: 1rem;
+        }
+
+        .features-list h4 {
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .feature {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 0.75rem;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .feature-icon {
+            width: 24px;
+            height: 24px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.5rem;
+            color: #000;
+            font-size: 0.7rem;
+        }
+
+        .toggle-theme {
+            background: rgba(0, 0, 0, 0.2);
+            border: var(--glass-border);
+            color: var(--text-color);
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .toggle-theme:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .toggle-theme-icon {
+            margin-right: 0.5rem;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            width: 90%;
+            max-width: 500px;
+            background: var(--gradient-bg);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--box-shadow);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .pulsating-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        .pulsating-circle::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: var(--accent-color);
+            opacity: 0.7;
+            animation: pulse 2s infinite;
+        }
+
+        .pulsating-icon {
+            font-size: 3rem;
+            color: #000;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                opacity: 0.7;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(0.95);
+                opacity: 0;
+            }
+        }
+
+        /* Loading effect */
+        .loading {
+            display: none;
+            width: 48px;
+            height: 48px;
+            border: 5px solid var(--text-color);
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .dark-theme {
+            --gradient-bg: linear-gradient(135deg, #000428, #004e92);
+            --text-color: #ffffff;
+            --accent-color: #00cffd;
+            --secondary-accent: #3699ff;
+            --danger-color: #f64e60;
+            --safe-color: #0bb783;
+        }
+
+        .light-theme {
+            --gradient-bg: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            --text-color: #212121;
+            --accent-color: #3699ff;
+            --secondary-accent: #187de4;
+            --danger-color: #f64e60;
+            --safe-color: #0bb783;
+            --glass-bg: rgba(255, 255, 255, 0.25);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        /* Neural Network Visualization */
+        #neural-viz {
+            width: 100%;
+            height: 100%;
+        }
+
+        .model-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 1.5rem 0;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+
+        .model-info-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 1rem;
+        }
+
+        .model-info-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .model-info-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .error-message {
+            color: var(--danger-color);
+            text-align: center;
+            display: none;
+            margin-top: 1rem;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .app-body {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .app-sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: var(--glass-border);
+                padding: 1.5rem;
+            }
+
+            .app-main {
+                padding: 1.5rem;
+            }
+
+            .app-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+
+            .logo {
+                flex-direction: column;
+            }
+
+            .logo-icon {
+                margin-right: 0;
+                margin-bottom: 1rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .result-heading {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div class="app-container">
+        <div class="app-header">
+            <div class="logo">
+                <div class="logo-icon">🛡️</div>
+                <div class="logo-text">
+                    <h1>Neural SMS Guardian</h1>
+                    <p>Advanced AI-Powered Spam Detection</p>
+                </div>
+            </div>
+            <button class="toggle-theme">
+                <span class="toggle-theme-icon">🌙</span>
+                <span class="toggle-theme-text">Switch Theme</span>
+            </button>
+        </div>
+        <div class="app-body">
+            <div class="app-sidebar">
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-value" id="spam-count">0</div>
+                        <div class="stat-label">Spam Detected</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="ham-count">0</div>
+                        <div class="stat-label">Ham Verified</div>
+                    </div>
+                </div>
+                <div class="input-container">
+                    <label for="message-input">Enter SMS Message:</label>
+                    <textarea id="message-input" placeholder="Type or paste the SMS message here to analyze..."></textarea>
+                    <button id="analyze-btn" class="btn">
+                        <span class="btn-icon">🔍</span>
+                        Analyze Message
+                    </button>
+                </div>
+                <div class="model-info">
+                    <div class="model-info-item">
+                        <div class="model-info-value">99.2%</div>
+                        <div class="model-info-label">Accuracy</div>
+                    </div>
+                    <div class="model-info-item">
+                        <div class="model-info-value">NB + TF-IDF</div>
+                        <div class="model-info-label">Algorithm</div>
+                    </div>
+                    <div class="model-info-item">
+                        <div class="model-info-value">5,574</div>
+                        <div class="model-info-label">Training Samples</div>
+                    </div>
+                </div>
+                <div class="error-message" id="error-message">
+                    Please enter a message to analyze.
+                </div>
+            </div>
+            <div class="app-main">
+                <div class="result-container">
+                    <div class="result-card" id="result-card">
+                        <div class="result-icon" id="result-icon">🔍</div>
+                        <h2 class="result-heading" id="result-heading">Enter a message to analyze</h2>
+                        <p class="result-details" id="result-details">Our advanced AI system will classify your SMS and provide detailed insights.</p>
+                        <div class="accuracy-bar">
+                            <div class="accuracy-fill" id="accuracy-fill"></div>
+                        </div>
+                        <div class="accuracy-text" id="accuracy-text">Confidence: --</div>
+                        <div class="neural-visualization">
+                            <canvas id="neural-viz"></canvas>
+                        </div>
+                        <div class="features-list" id="features-list" style="display: none;">
+                            <h4>Key Features Identified:</h4>
+                            <div class="features-grid" id="features-grid">
+                                <!-- Features will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="analysis-modal">
+        <div class="modal-content">
+            <button class="modal-close" id="modal-close">×</button>
+            <div class="pulsating-circle">
+                <span class="pulsating-icon">🧠</span>
+            </div>
+            <h2>Analyzing Message</h2>
+            <p>Our neural network is processing your message and identifying key patterns...</p>
+        </div>
+    </div>
+    <script src="/static/script.js"></script>
+    {% if result %}
+    <div id="result" style="display: none;">{{ result }}</div>
+    {% endif %}
+</body>
+</html>
